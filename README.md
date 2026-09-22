@@ -1,4 +1,8 @@
-# Resource Booking System
+# backend-developer-as-final-73503-yagavolla
+
+Final Project Assignment - This repository contains the complete final project code and documentation.
+
+## Resource Booking System
 
 Spring Boot REST API for booking rooms, vehicles, and other resources. It uses Java 21, Spring Security, JWT, Spring Data JPA, and PostgreSQL. An H2 database is provided as the convenient local default.
 
