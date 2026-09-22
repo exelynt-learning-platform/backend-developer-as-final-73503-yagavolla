@@ -28,6 +28,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 class BookingApiIntegrationTest {
+        private static final String USERNAME = "user";
+        private static final String USER_PASSWORD = "User@123";
+        private static final String ADMIN_USERNAME = "admin";
+        private static final String ADMIN_PASSWORD = "Admin@123";
+
     @Autowired
     private MockMvc mockMvc;
 
@@ -50,12 +55,12 @@ class BookingApiIntegrationTest {
 
     @Test
     void loginReturnsJwtAndRejectsBadPassword() throws Exception {
-        String token = login("user", "User@123");
+        String token = userToken();
 
         org.junit.jupiter.api.Assertions.assertTrue(token.split("\\.").length == 3);
         mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"user\",\"password\":\"wrong\"}"))
+                        .content(loginJson(USERNAME, "wrong")))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -80,15 +85,17 @@ class BookingApiIntegrationTest {
 
     @Test
     void adminCanCreateUpdateAndDeleteResourceButUserCannot() throws Exception {
-        String userToken = login("user", "User@123");
-        String adminToken = login("admin", "Admin@123");
+        String userToken = userToken();
+        String adminToken = adminToken();
         String resourceJson = "{\"name\":\"Test Room\",\"description\":\"Quiet room\",\"type\":\"ROOM\",\"price\":25.50,\"available\":true}";
 
         mockMvc.perform(post("/api/resources")
                         .header("Authorization", bearer(userToken))
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(resourceJson))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.status", is(403)))
+                .andExpect(jsonPath("$.message", is("Access denied")));
 
         String response = mockMvc.perform(post("/api/resources")
                         .header("Authorization", bearer(adminToken))
@@ -113,7 +120,7 @@ class BookingApiIntegrationTest {
 
     @Test
     void invalidResourcePayloadReturnsBadRequest() throws Exception {
-        String adminToken = login("admin", "Admin@123");
+        String adminToken = adminToken();
 
         mockMvc.perform(post("/api/resources")
                         .header("Authorization", bearer(adminToken))
@@ -125,8 +132,8 @@ class BookingApiIntegrationTest {
 
     @Test
     void reservationOwnershipFilteringAndAdminVisibilityWork() throws Exception {
-        String userToken = login("user", "User@123");
-        String adminToken = login("admin", "Admin@123");
+        String userToken = userToken();
+        String adminToken = adminToken();
         long resourceId = firstResourceId();
         String reservation = reservationJson(resourceId, 10);
 
@@ -158,8 +165,8 @@ class BookingApiIntegrationTest {
 
     @Test
     void reservationValidationFilteringPaginationAndSortingWork() throws Exception {
-        String adminToken = login("admin", "Admin@123");
-        String userToken = login("user", "User@123");
+        String adminToken = adminToken();
+        String userToken = userToken();
         long resourceId = firstResourceId();
 
         mockMvc.perform(post("/api/reservations")
@@ -196,8 +203,8 @@ class BookingApiIntegrationTest {
 
     @Test
     void reservationUpdateCrudAndMissingDataErrorsWork() throws Exception {
-        String userToken = login("user", "User@123");
-        String adminToken = login("admin", "Admin@123");
+        String userToken = userToken();
+        String adminToken = adminToken();
         long resourceId = firstResourceId();
 
         String response = mockMvc.perform(post("/api/reservations")
@@ -237,7 +244,7 @@ class BookingApiIntegrationTest {
 
     @Test
     void invalidReservationStatusAndSortFieldReturnBadRequest() throws Exception {
-        String adminToken = login("admin", "Admin@123");
+        String adminToken = adminToken();
 
         mockMvc.perform(get("/api/reservations")
                         .header("Authorization", bearer(adminToken))
@@ -257,7 +264,7 @@ class BookingApiIntegrationTest {
 
     @Test
     void userCannotUseAdminReservationUpdate() throws Exception {
-        String userToken = login("user", "User@123");
+        String userToken = userToken();
 
         mockMvc.perform(put("/api/reservations/1/admin")
                         .header("Authorization", bearer(userToken))
@@ -266,10 +273,18 @@ class BookingApiIntegrationTest {
                 .andExpect(status().isForbidden());
     }
 
-    private String login(String username, String password) throws Exception {
+        private String userToken() throws Exception {
+                return login(USERNAME, USER_PASSWORD);
+        }
+
+        private String adminToken() throws Exception {
+                return login(ADMIN_USERNAME, ADMIN_PASSWORD);
+        }
+
+        private String login(String username, String password) throws Exception {
         String response = mockMvc.perform(post("/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}"))
+                                                .content(loginJson(username, password)))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString();
         JsonNode json = objectMapper.readTree(response);
@@ -289,4 +304,8 @@ class BookingApiIntegrationTest {
     private String bearer(String token) {
         return "Bearer " + token;
     }
+
+        private String loginJson(String username, String password) {
+                return "{\"username\":\"" + username + "\",\"password\":\"" + password + "\"}";
+        }
 }
