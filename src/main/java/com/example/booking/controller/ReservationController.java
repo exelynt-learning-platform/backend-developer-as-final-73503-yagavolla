@@ -31,12 +31,12 @@ public class ReservationController {
 
     @GetMapping
     public Page<ReservationResponse> findAll(@RequestParam(required = false) ReservationStatus status,
-                                             @RequestParam(required = false) BigDecimal minPrice,
-                                             @RequestParam(required = false) BigDecimal maxPrice,
-                                             @RequestParam(defaultValue = "0") int page,
-                                             @RequestParam(defaultValue = "20") int size,
-                                             @RequestParam(defaultValue = "createdAt,desc") String sort,
-                                             Authentication authentication) {
+                                            @RequestParam(required = false) BigDecimal minPrice,
+                                            @RequestParam(required = false) BigDecimal maxPrice,
+                                            @RequestParam(defaultValue = "0") int page,
+                                            @RequestParam(defaultValue = "20") int size,
+                                            @RequestParam(defaultValue = "createdAt,desc") String sort,
+                                            Authentication authentication) {
         if (page < 0 || size < 1 || size > 100) {
             throw new IllegalArgumentException("page must be >= 0 and size must be between 1 and 100");
         }
