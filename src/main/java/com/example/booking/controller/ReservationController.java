@@ -4,7 +4,6 @@ import com.example.booking.dto.ReservationAdminRequest;
 import com.example.booking.dto.ReservationRequest;
 import com.example.booking.dto.ReservationResponse;
 import com.example.booking.dto.ReservationQuery;
-import com.example.booking.enums.ReservationStatus;
 import com.example.booking.service.ReservationService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;

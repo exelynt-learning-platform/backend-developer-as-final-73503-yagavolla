@@ -39,13 +39,24 @@ public class ReservationQuery {
     }
 
     public Pageable pageable() {
+        if (sort == null || sort.isBlank()) {
+            throw new IllegalArgumentException("sort must not be blank");
+        }
         String[] sortParts = sort.split(",", 2);
-        if (sortParts[0].isBlank() || !ALLOWED_SORT_FIELDS.contains(sortParts[0])) {
+        String field = sortParts[0].trim();
+        if (!ALLOWED_SORT_FIELDS.contains(field)) {
             throw new IllegalArgumentException("unsupported sort field: " + sortParts[0]);
         }
-        Sort.Direction direction = sortParts.length > 1 && sortParts[1].equalsIgnoreCase("asc")
-                ? Sort.Direction.ASC : Sort.Direction.DESC;
-        return PageRequest.of(page, size, Sort.by(direction, sortParts[0]));
+        String directionValue = sortParts.length > 1 ? sortParts[1].trim() : "desc";
+        Sort.Direction direction;
+        if (directionValue.equalsIgnoreCase("asc")) {
+            direction = Sort.Direction.ASC;
+        } else if (directionValue.equalsIgnoreCase("desc")) {
+            direction = Sort.Direction.DESC;
+        } else {
+            throw new IllegalArgumentException("sort direction must be asc or desc");
+        }
+        return PageRequest.of(page, size, Sort.by(direction, field));
     }
 
     public ReservationStatus getStatus() { return status; }

@@ -1,8 +1,8 @@
 package com.example.booking;
 
-import com.example.booking.entity.Reservation;
 import com.example.booking.repository.ReservationRepository;
 import com.example.booking.repository.ResourceRepository;
+import com.example.booking.security.JwtService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -13,7 +13,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 import static org.hamcrest.Matchers.containsString;
@@ -41,6 +40,9 @@ class BookingApiIntegrationTest {
     @Autowired
     private ResourceRepository resources;
 
+        @Autowired
+        private JwtService jwtService;
+
     @BeforeEach
     void cleanReservations() {
         reservations.deleteAll();
@@ -60,6 +62,19 @@ class BookingApiIntegrationTest {
     @Test
     void unauthenticatedRequestsAreRejected() throws Exception {
         mockMvc.perform(get("/api/resources"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void tokenForMissingUserIsRejectedAsUnauthorized() throws Exception {
+        var missingUser = org.springframework.security.core.userdetails.User.withUsername("missing")
+                .password("encoded")
+                .roles("USER")
+                .build();
+        String token = jwtService.generateToken(missingUser);
+
+        mockMvc.perform(get("/api/resources")
+                        .header("Authorization", bearer(token)))
                 .andExpect(status().isUnauthorized());
     }
 
@@ -232,6 +247,11 @@ class BookingApiIntegrationTest {
         mockMvc.perform(get("/api/reservations")
                         .header("Authorization", bearer(adminToken))
                         .param("sort", "password,asc"))
+                .andExpect(status().isBadRequest());
+
+        mockMvc.perform(get("/api/reservations")
+                        .header("Authorization", bearer(adminToken))
+                        .param("sort", "price,sideways"))
                 .andExpect(status().isBadRequest());
     }
 
