@@ -1,5 +1,6 @@
 package com.example.booking.security;
 
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,11 +11,15 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
+
     private final JwtService jwtService;
     private final CustomUserDetailsService users;
 
@@ -39,8 +44,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         SecurityContextHolder.getContext().setAuthentication(auth);
                     }
                 }
-            } catch (RuntimeException ignored) {
-                // Invalid tokens are treated as unauthenticated requests.
+            } catch (JwtException | IllegalArgumentException ex) {
+                log.debug("Rejected invalid JWT bearer token: {}", ex.getMessage());
             }
         }
         filterChain.doFilter(request, response);

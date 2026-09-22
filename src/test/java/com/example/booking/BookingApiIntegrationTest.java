@@ -209,6 +209,12 @@ class BookingApiIntegrationTest {
                 .andExpect(jsonPath("$.status", is("CONFIRMED")))
                 .andExpect(jsonPath("$.price", is(75)));
 
+        mockMvc.perform(put("/api/reservations/{id}", reservationId)
+                        .header("Authorization", bearer(userToken))
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(reservationJson(resourceId, 19)))
+                .andExpect(status().isConflict());
+
         mockMvc.perform(get("/api/resources/999999")
                         .header("Authorization", bearer(userToken)))
                 .andExpect(status().isNotFound());

@@ -16,8 +16,13 @@ public class ApiExceptionHandler {
         return error(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler({ConflictException.class, IllegalArgumentException.class})
-    ResponseEntity<ErrorResponse> badRequest(RuntimeException ex) {
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<ErrorResponse> conflict(ConflictException ex) {
+        return error(HttpStatus.CONFLICT, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    ResponseEntity<ErrorResponse> badRequest(IllegalArgumentException ex) {
         return error(HttpStatus.BAD_REQUEST, ex.getMessage());
     }
 

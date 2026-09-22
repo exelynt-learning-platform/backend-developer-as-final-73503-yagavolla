@@ -22,22 +22,25 @@ DB_USERNAME=postgres
 DB_PASSWORD=your-password
 JWT_SECRET=replace-with-a-random-secret-at-least-32-characters
 JWT_EXPIRATION_MS=86400000
+SPRING_PROFILES_ACTIVE=dev
+SEED_ADMIN_PASSWORD=replace-with-a-strong-admin-password
+SEED_USER_PASSWORD=replace-with-a-strong-user-password
 ```
 
 Tests use an isolated in-memory H2 database and do not require PostgreSQL.
 
 `spring.jpa.hibernate.ddl-auto=update` is intended for local development. Use migrations for production.
 
-## Seed accounts
+## Development seed accounts
 
-The application creates these accounts on an empty database:
+When the `dev` profile is active, the application creates these accounts on an empty database using the `SEED_*_PASSWORD` environment variables:
 
 | Role | Username | Password |
 | --- | --- | --- |
 | ADMIN | `admin` | `Admin@123` |
 | USER | `user` | `User@123` |
 
-Change these credentials before using a shared environment.
+Seeding is disabled outside the `dev` profile. Never enable that profile in production with the sample credentials.
 
 ## API
 
